@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: finance-control-finance-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/finance_control_finance}
+    username: ${SPRING_DATASOURCE_USERNAME:finance_app}
+    password: ${SPRING_DATASOURCE_PASSWORD:local_finance_password}
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: ${SERVER_PORT:8081}
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      base-path: /
+      exposure:
+        include: health
+      path-mapping:
+        health: health
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+
+springdoc:
+  api-docs:
+    path: /openapi/v1.json
+  swagger-ui:
+    path: /swagger
+    disable-swagger-default-url: true
+  packages-to-scan: com.financecontrol.finance.api

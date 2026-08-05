@@ -1,0 +1,88 @@
+@host = http://localhost:8081
+
+### Health
+GET {{host}}/health
+Accept: application/json
+
+### Create income
+POST {{host}}/api/v1/finance/incomes
+Content-Type: application/json
+
+{
+  "description": "Salary",
+  "amount": 5000.00,
+  "transactionDate": "2026-07-05"
+}
+
+> {% client.global.set("incomeId", response.body.id); %}
+
+### Get created income
+GET {{host}}/api/v1/finance/incomes/{{incomeId}}
+Accept: application/json
+
+### List incomes
+GET {{host}}/api/v1/finance/incomes
+Accept: application/json
+
+### Update created income
+PUT {{host}}/api/v1/finance/incomes/{{incomeId}}
+Content-Type: application/json
+
+{
+  "description": "Updated salary",
+  "amount": 5250.00,
+  "transactionDate": "2026-07-05"
+}
+
+### Create expense
+POST {{host}}/api/v1/finance/expenses
+Content-Type: application/json
+
+{
+  "description": "Groceries",
+  "amount": 650.00,
+  "transactionDate": "2026-07-10",
+  "category": "FOOD"
+}
+
+> {% client.global.set("expenseId", response.body.id); %}
+
+### Get created expense
+GET {{host}}/api/v1/finance/expenses/{{expenseId}}
+Accept: application/json
+
+### List expenses
+GET {{host}}/api/v1/finance/expenses
+Accept: application/json
+
+### Update created expense
+PUT {{host}}/api/v1/finance/expenses/{{expenseId}}
+Content-Type: application/json
+
+{
+  "description": "Monthly groceries",
+  "amount": 700.00,
+  "transactionDate": "2026-07-10",
+  "category": "OTHER"
+}
+
+### List categories
+GET {{host}}/api/v1/finance/categories
+Accept: application/json
+
+### Monthly finance summary
+GET {{host}}/api/v1/finance/summary?month=2026-07
+Accept: application/json
+
+### Delete created expense
+DELETE {{host}}/api/v1/finance/expenses/{{expenseId}}
+
+### Delete created income
+DELETE {{host}}/api/v1/finance/incomes/{{incomeId}}
+
+### OpenAPI document
+GET {{host}}/openapi/v1.json
+Accept: application/json
+
+### Swagger UI
+GET {{host}}/swagger
