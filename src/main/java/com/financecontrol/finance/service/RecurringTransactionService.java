@@ -29,16 +29,19 @@ public class RecurringTransactionService {
     private final IncomeRepository incomeRepository;
     private final ExpenseRepository expenseRepository;
     private final Clock clock;
+    private final CategoryService categoryService;
 
     public RecurringTransactionService(
             RecurringTransactionRepository recurringRepository,
             IncomeRepository incomeRepository,
             ExpenseRepository expenseRepository,
-            Clock clock) {
+            Clock clock,
+            CategoryService categoryService) {
         this.recurringRepository = recurringRepository;
         this.incomeRepository = incomeRepository;
         this.expenseRepository = expenseRepository;
         this.clock = clock;
+        this.categoryService = categoryService;
     }
 
     @Transactional(readOnly = true)
@@ -51,13 +54,13 @@ public class RecurringTransactionService {
 
     @Transactional
     public RecurringTransactionResponse create(UUID ownerUserId, RecurringTransactionRequest request) {
-        validateCategory(request.kind(), request.category());
+        var category = validateCategory(ownerUserId, request.kind(), request.category());
         var recurring = new RecurringTransaction(
                 ownerUserId,
                 request.kind(),
                 request.description().trim(),
                 request.amount().setScale(2, RoundingMode.UNNECESSARY),
-                request.category(),
+                category,
                 request.frequency(),
                 request.startDate(),
                 request.endDate());
@@ -72,14 +75,14 @@ public class RecurringTransactionService {
             UUID id,
             UpdateRecurringTransactionRequest request) {
         var recurring = findEntity(ownerUserId, id);
-        validateCategory(recurring.getKind(), request.category());
+        var category = validateCategory(ownerUserId, recurring.getKind(), request.category());
         if (request.endDate() != null && request.endDate().isBefore(recurring.getStartDate())) {
             throw new DomainValidationException("End date must be on or after start date.");
         }
         recurring.update(
                 request.description().trim(),
                 request.amount().setScale(2, RoundingMode.UNNECESSARY),
-                request.category(),
+                category,
                 request.endDate(),
                 request.active());
         if (recurring.isActive()) {
@@ -147,14 +150,16 @@ public class RecurringTransactionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Recurring transaction", id));
     }
 
-    private static void validateCategory(
+    private String validateCategory(
+            UUID ownerUserId,
             TransactionKind kind,
-            com.financecontrol.finance.domain.Category category) {
+            String category) {
         if (kind == TransactionKind.EXPENSE && category == null) {
             throw new DomainValidationException("Expense recurrences require a category.");
         }
         if (kind == TransactionKind.INCOME && category != null) {
             throw new DomainValidationException("Income recurrences cannot have a category.");
         }
+        return category == null ? null : categoryService.requireCategory(ownerUserId, category);
     }
 }

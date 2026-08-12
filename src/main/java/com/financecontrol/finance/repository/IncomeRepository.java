@@ -7,8 +7,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.financecontrol.finance.domain.Income;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -17,6 +19,17 @@ public interface IncomeRepository extends JpaRepository<Income, UUID>, JpaSpecif
     List<Income> findAllByOwnerUserIdOrderByTransactionDateDescCreatedAtDesc(UUID ownerUserId);
 
     Optional<Income> findByIdAndOwnerUserId(UUID id, UUID ownerUserId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT income
+            FROM Income income
+            WHERE income.id = :id
+              AND income.ownerUserId = :ownerUserId
+            """)
+    Optional<Income> findByIdAndOwnerUserIdForUpdate(
+            @Param("id") UUID id,
+            @Param("ownerUserId") UUID ownerUserId);
 
     long deleteByOwnerUserId(UUID ownerUserId);
 

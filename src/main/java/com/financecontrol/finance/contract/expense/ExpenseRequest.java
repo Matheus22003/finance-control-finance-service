@@ -3,7 +3,6 @@ package com.financecontrol.finance.contract.expense;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import com.financecontrol.finance.domain.Category;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
@@ -23,6 +22,7 @@ public record ExpenseRequest(
         @NotNull(message = "Transaction date is required.")
         LocalDate transactionDate,
 
-        @NotNull(message = "Category is required.")
-        Category category) {
+        @NotBlank(message = "Category is required.")
+        @Size(max = 50, message = "Category code must contain at most 50 characters.")
+        String category) {
 }

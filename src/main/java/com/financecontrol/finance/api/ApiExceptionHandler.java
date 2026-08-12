@@ -11,6 +11,7 @@ import jakarta.validation.ConstraintViolationException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -106,6 +107,19 @@ public class ApiExceptionHandler {
                 HttpStatus.CONFLICT,
                 "Data conflict",
                 "The operation conflicts with the current data state.",
+                request);
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(problemDetail);
+    }
+
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<ProblemDetail> handleConcurrentUpdate(
+            OptimisticLockingFailureException exception,
+            HttpServletRequest request) {
+        var problemDetail = createProblemDetail(
+                HttpStatus.CONFLICT,
+                "Concurrent update",
+                "The goal changed during this operation. Refresh it and try again.",
                 request);
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(problemDetail);

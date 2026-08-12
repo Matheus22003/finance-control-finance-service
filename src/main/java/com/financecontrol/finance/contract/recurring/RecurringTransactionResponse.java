@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import com.financecontrol.finance.domain.Category;
 import com.financecontrol.finance.domain.RecurrenceFrequency;
 import com.financecontrol.finance.domain.RecurringTransaction;
 import com.financecontrol.finance.domain.TransactionKind;
@@ -15,7 +14,7 @@ public record RecurringTransactionResponse(
         TransactionKind kind,
         String description,
         BigDecimal amount,
-        Category category,
+        String category,
         RecurrenceFrequency frequency,
         LocalDate startDate,
         LocalDate nextOccurrenceDate,

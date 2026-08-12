@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import com.financecontrol.finance.contract.income.IncomeRequest;
 import com.financecontrol.finance.contract.income.IncomeResponse;
+import com.financecontrol.finance.contract.income.IncomeGoalAllocationResponse;
 import com.financecontrol.finance.service.IncomeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -57,6 +58,15 @@ public class IncomeController {
             @RequestHeader(USER_ID_HEADER) UUID userId,
             @PathVariable UUID id) {
         return incomeService.findById(userId, id);
+    }
+
+    @GetMapping("/{id}/goal-allocations")
+    @Operation(summary = "Show how an income is allocated across financial goals")
+    @ApiResponse(responseCode = "404", description = "Income not found")
+    public IncomeGoalAllocationResponse findGoalAllocations(
+            @RequestHeader(USER_ID_HEADER) UUID userId,
+            @PathVariable UUID id) {
+        return incomeService.findGoalAllocations(userId, id);
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)

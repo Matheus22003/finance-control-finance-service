@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.financecontrol.finance.domain.Category;
+import com.financecontrol.finance.domain.FinanceCategory;
 import com.financecontrol.finance.repository.ExpenseRepository;
 import com.financecontrol.finance.repository.IncomeRepository;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,9 @@ class FinanceSummaryServiceTests {
         var incomeRepository = mock(IncomeRepository.class);
         var expenseRepository = mock(ExpenseRepository.class);
         var recurringTransactionService = mock(RecurringTransactionService.class);
+        var categoryService = mock(CategoryService.class);
+        var foodCategory = mock(FinanceCategory.class);
+        var rentCategory = mock(FinanceCategory.class);
         var foodTotal = mock(ExpenseRepository.CategoryTotal.class);
         var startDate = LocalDate.of(2026, 7, 1);
         var endDate = LocalDate.of(2026, 8, 1);
@@ -40,6 +44,9 @@ class FinanceSummaryServiceTests {
         when(foodTotal.getTotal()).thenReturn(new BigDecimal("650.00"));
         when(expenseRepository.sumAmountByCategoryBetween(userId, startDate, endDate))
                 .thenReturn(List.of(foodTotal));
+        when(foodCategory.getCode()).thenReturn(Category.FOOD);
+        when(rentCategory.getCode()).thenReturn(Category.RENT);
+        when(categoryService.findEntities(userId)).thenReturn(List.of(foodCategory, rentCategory));
         doNothing().when(recurringTransactionService).materializeDueForUser(userId);
 
         var clock = Clock.fixed(Instant.parse("2026-07-31T12:00:00Z"), ZoneOffset.UTC);
@@ -47,7 +54,8 @@ class FinanceSummaryServiceTests {
                 incomeRepository,
                 expenseRepository,
                 clock,
-                recurringTransactionService);
+                recurringTransactionService,
+                categoryService);
 
         var summary = service.getCurrentMonthlySummary(userId);
 
@@ -64,6 +72,7 @@ class FinanceSummaryServiceTests {
         var incomeRepository = mock(IncomeRepository.class);
         var expenseRepository = mock(ExpenseRepository.class);
         var recurringTransactionService = mock(RecurringTransactionService.class);
+        var categoryService = mock(CategoryService.class);
         var userId = UUID.fromString("7f805b46-0b56-4a5d-86eb-d4f53c92db93");
 
         when(incomeRepository.sumAmountBetween(
@@ -95,7 +104,8 @@ class FinanceSummaryServiceTests {
                 incomeRepository,
                 expenseRepository,
                 Clock.fixed(Instant.parse("2026-07-31T12:00:00Z"), ZoneOffset.UTC),
-                recurringTransactionService);
+                recurringTransactionService,
+                categoryService);
 
         var trend = service.getCurrentTrend(userId, 2);
 

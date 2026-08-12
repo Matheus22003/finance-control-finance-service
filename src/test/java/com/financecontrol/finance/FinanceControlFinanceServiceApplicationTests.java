@@ -10,12 +10,17 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 
 import com.financecontrol.finance.repository.ExpenseRepository;
 import com.financecontrol.finance.repository.IncomeRepository;
 import com.financecontrol.finance.repository.MonthlyBudgetRepository;
 import com.financecontrol.finance.repository.RecurringTransactionRepository;
+import com.financecontrol.finance.repository.FinancialGoalRepository;
+import com.financecontrol.finance.repository.FinancialGoalContributionRepository;
+import com.financecontrol.finance.repository.FinanceCategoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +33,8 @@ import org.springframework.test.context.ActiveProfiles;
 class FinanceControlFinanceServiceApplicationTests {
 
     private static final Pattern ID_PATTERN = Pattern.compile("\\\"id\\\":\\\"([^\\\"]+)\\\"");
+    private static final Pattern NUMERIC_ID_PATTERN = Pattern.compile("\\\"id\\\":(\\d+)");
+    private static final Pattern CATEGORY_CODE_PATTERN = Pattern.compile("\\\"code\\\":\\\"([^\\\"]+)\\\"");
     private static final String DEMO_USER_ID = "7f805b46-0b56-4a5d-86eb-d4f53c92db93";
 
     private final HttpClient httpClient = HttpClient.newBuilder()
@@ -49,12 +56,243 @@ class FinanceControlFinanceServiceApplicationTests {
     @Autowired
     private MonthlyBudgetRepository monthlyBudgetRepository;
 
+    @Autowired
+    private FinancialGoalRepository financialGoalRepository;
+
+    @Autowired
+    private FinancialGoalContributionRepository financialGoalContributionRepository;
+
+    @Autowired
+    private FinanceCategoryRepository financeCategoryRepository;
+
     @BeforeEach
     void cleanDatabase() {
         expenseRepository.deleteAll();
         incomeRepository.deleteAll();
         recurringTransactionRepository.deleteAll();
         monthlyBudgetRepository.deleteAll();
+        financialGoalContributionRepository.deleteAll();
+        financialGoalRepository.deleteAll();
+        financeCategoryRepository.deleteAll();
+    }
+
+    @Test
+    void financialGoalCrudCalculatesProgressAndStatus() throws IOException, InterruptedException {
+        var incomeResponse = post("/api/v1/finance/incomes", """
+                {
+                  "description": "Monthly salary",
+                  "amount": 8000.00,
+                  "transactionDate": "%s"
+                }
+                """.formatted(LocalDate.now()));
+        assertEquals(201, incomeResponse.statusCode());
+        var incomeId = extractId(incomeResponse.body());
+
+        var targetDate = LocalDate.now().plusMonths(3);
+        var createResponse = post("/api/v1/finance/goals", """
+                {
+                  "name": "Emergency reserve",
+                  "targetAmount": 10000.00,
+                  "currentAmount": 2500.00,
+                  "targetDate": "%s"
+                }
+                """.formatted(targetDate));
+
+        assertEquals(201, createResponse.statusCode());
+        var id = extractId(createResponse.body());
+        assertTrue(createResponse.body().contains("\"progressPercentage\":25.00"), createResponse.body());
+        assertTrue(createResponse.body().contains("\"status\":\"ACTIVE\""), createResponse.body());
+
+        var foreignIncomeResponse = sendAsUser(
+                "POST",
+                "/api/v1/finance/incomes",
+                """
+                        {
+                          "description": "Private income",
+                          "amount": 100.00,
+                          "transactionDate": "%s"
+                        }
+                        """.formatted(LocalDate.now()),
+                "8750c27d-a3ff-4c8f-997b-c6f230005040");
+        var foreignIncomeId = extractId(foreignIncomeResponse.body());
+        var rejectedForeignSource = post(
+                "/api/v1/finance/goals/" + id + "/contributions",
+                """
+                        {
+                          "amount": 10.00,
+                          "contributionDate": "%s",
+                          "note": "Invalid source",
+                          "sourceIncomeId": "%s"
+                        }
+                        """.formatted(LocalDate.now(), foreignIncomeId));
+        assertEquals(404, rejectedForeignSource.statusCode());
+
+        var contributionResponse = post(
+                "/api/v1/finance/goals/" + id + "/contributions",
+                """
+                {
+                  "amount": 7500.00,
+                  "contributionDate": "%s",
+                  "note": "Monthly savings",
+                  "sourceIncomeId": "%s"
+                }
+                """.formatted(LocalDate.now(), incomeId));
+        assertEquals(201, contributionResponse.statusCode());
+        var contributionId = extractId(contributionResponse.body());
+        assertTrue(contributionResponse.body().contains("\"amount\":7500.00"), contributionResponse.body());
+        assertTrue(contributionResponse.body().contains("\"type\":\"CONTRIBUTION\""), contributionResponse.body());
+        assertTrue(contributionResponse.body().contains("\"incomeId\":\"" + incomeId + "\""),
+                contributionResponse.body());
+        assertTrue(contributionResponse.body().contains("\"description\":\"Monthly salary\""),
+                contributionResponse.body());
+
+        var completedGoal = get("/api/v1/finance/goals/" + id);
+        assertEquals(200, completedGoal.statusCode());
+        assertTrue(completedGoal.body().contains("\"status\":\"COMPLETED\""), completedGoal.body());
+        assertTrue(completedGoal.body().contains("\"remainingAmount\":0.00"), completedGoal.body());
+
+        var history = get("/api/v1/finance/goals/" + id + "/contributions");
+        assertEquals(200, history.statusCode());
+        assertTrue(history.body().contains("\"type\":\"INITIAL\""), history.body());
+        assertTrue(history.body().contains("\"type\":\"CONTRIBUTION\""), history.body());
+
+        assertEquals(204, delete("/api/v1/finance/incomes/" + incomeId).statusCode());
+        var historyAfterIncomeDeletion = get("/api/v1/finance/goals/" + id + "/contributions");
+        assertTrue(historyAfterIncomeDeletion.body().contains("\"incomeId\":null"),
+                historyAfterIncomeDeletion.body());
+        assertTrue(historyAfterIncomeDeletion.body().contains("\"description\":\"Monthly salary\""),
+                historyAfterIncomeDeletion.body());
+
+        assertEquals(204, delete(
+                "/api/v1/finance/goals/" + id + "/contributions/" + contributionId).statusCode());
+        var activeGoal = get("/api/v1/finance/goals/" + id);
+        assertTrue(activeGoal.body().contains("\"currentAmount\":2500.00"), activeGoal.body());
+        assertTrue(activeGoal.body().contains("\"status\":\"ACTIVE\""), activeGoal.body());
+
+        var invalidDirectUpdate = put("/api/v1/finance/goals/" + id, """
+                {
+                  "name": "Emergency reserve",
+                  "targetAmount": 10000.00,
+                  "currentAmount": 3000.00,
+                  "targetDate": "%s"
+                }
+                """.formatted(targetDate));
+        assertEquals(400, invalidDirectUpdate.statusCode());
+        assertTrue(invalidDirectUpdate.body().contains(
+                "Current amount can only be changed through goal contributions."),
+                invalidDirectUpdate.body());
+
+        assertTrue(get("/api/v1/finance/goals").body().contains(id));
+        assertEquals(204, delete("/api/v1/finance/goals/" + id).statusCode());
+        assertEquals(404, get("/api/v1/finance/goals/" + id).statusCode());
+    }
+
+    @Test
+    void sourceIncomeAllocationCannotBeExceededEvenByConcurrentContributions()
+            throws IOException, InterruptedException {
+        var incomeResponse = post("/api/v1/finance/incomes", """
+                {
+                  "description": "Freelance project",
+                  "amount": 500.00,
+                  "transactionDate": "%s"
+                }
+                """.formatted(LocalDate.now()));
+        var incomeId = extractId(incomeResponse.body());
+        var firstGoalId = extractId(post("/api/v1/finance/goals", """
+                {
+                  "name": "First goal",
+                  "targetAmount": 1000.00,
+                  "currentAmount": 0.00,
+                  "targetDate": "%s"
+                }
+                """.formatted(LocalDate.now().plusMonths(6))).body());
+        var secondGoalId = extractId(post("/api/v1/finance/goals", """
+                {
+                  "name": "Second goal",
+                  "targetAmount": 1000.00,
+                  "currentAmount": 0.00,
+                  "targetDate": "%s"
+                }
+                """.formatted(LocalDate.now().plusMonths(6))).body());
+        var contributionBody = """
+                {
+                  "amount": 400.00,
+                  "contributionDate": "%s",
+                  "note": "Concurrent allocation",
+                  "sourceIncomeId": "%s"
+                }
+                """.formatted(LocalDate.now(), incomeId);
+
+        var firstContribution = postAsync(
+                "/api/v1/finance/goals/" + firstGoalId + "/contributions",
+                contributionBody);
+        var secondContribution = postAsync(
+                "/api/v1/finance/goals/" + secondGoalId + "/contributions",
+                contributionBody);
+        CompletableFuture.allOf(firstContribution, secondContribution).join();
+        var statuses = List.of(
+                firstContribution.join().statusCode(),
+                secondContribution.join().statusCode());
+
+        assertTrue(statuses.contains(201), statuses.toString());
+        assertTrue(statuses.contains(400), statuses.toString());
+
+        var incomeAfterAllocation = get("/api/v1/finance/incomes/" + incomeId);
+        assertTrue(incomeAfterAllocation.body().contains("\"goalAllocatedAmount\":400.00"),
+                incomeAfterAllocation.body());
+
+        var allocationDetails = get(
+                "/api/v1/finance/incomes/" + incomeId + "/goal-allocations");
+        assertEquals(200, allocationDetails.statusCode());
+        assertTrue(allocationDetails.body().contains("\"goalAllocatedAmount\":400.00"),
+                allocationDetails.body());
+        assertTrue(allocationDetails.body().contains("\"goalAvailableAmount\":100.00"),
+                allocationDetails.body());
+        assertTrue(allocationDetails.body().contains("\"amount\":400.00"),
+                allocationDetails.body());
+        assertTrue(
+                allocationDetails.body().contains("First goal")
+                        || allocationDetails.body().contains("Second goal"),
+                allocationDetails.body());
+        assertTrue(incomeAfterAllocation.body().contains("\"goalAvailableAmount\":100.00"),
+                incomeAfterAllocation.body());
+
+        var invalidIncomeReduction = put("/api/v1/finance/incomes/" + incomeId, """
+                {
+                  "description": "Freelance project",
+                  "amount": 399.99,
+                  "transactionDate": "%s"
+                }
+                """.formatted(LocalDate.now()));
+        assertEquals(400, invalidIncomeReduction.statusCode());
+        assertTrue(invalidIncomeReduction.body().contains(
+                "Income amount cannot be lower than the amount already allocated to goals."),
+                invalidIncomeReduction.body());
+    }
+
+    @Test
+    void cashFlowProjectionIncludesRecordedAndFutureRecurringOccurrences()
+            throws IOException, InterruptedException {
+        var today = LocalDate.now();
+        var recurringResponse = post("/api/v1/finance/recurring-transactions", """
+                {
+                  "kind": "INCOME",
+                  "description": "Monthly income",
+                  "amount": 100.00,
+                  "category": null,
+                  "frequency": "MONTHLY",
+                  "startDate": "%s",
+                  "endDate": null
+                }
+                """.formatted(today));
+        assertEquals(201, recurringResponse.statusCode());
+
+        var projection = get("/api/v1/finance/projections/cash-flow?months=2");
+
+        assertEquals(200, projection.statusCode());
+        assertTrue(projection.body().contains("\"months\":2"), projection.body());
+        assertTrue(projection.body().contains("\"totalProjectedIncome\":200.00"), projection.body());
+        assertTrue(projection.body().contains("\"projectedCumulativeBalance\":200.00"), projection.body());
     }
 
     @Test
@@ -282,7 +520,7 @@ class FinanceControlFinanceServiceApplicationTests {
         assertEquals(400, response.statusCode());
         assertTrue(response.headers().firstValue("content-type").orElse("")
                 .startsWith("application/problem+json"));
-        assertTrue(response.body().contains("\"title\":\"Invalid request\""), response.body());
+        assertTrue(response.body().contains("\"title\":\"Validation failed\""), response.body());
     }
 
     @Test
@@ -290,9 +528,54 @@ class FinanceControlFinanceServiceApplicationTests {
         var response = get("/api/v1/finance/categories");
 
         assertEquals(200, response.statusCode());
-        assertEquals(
-                "[\"FOOD\",\"TRANSPORT\",\"RENT\",\"LEISURE\",\"HEALTH\",\"OTHER\"]",
-                response.body());
+        assertTrue(response.body().contains("\"code\":\"FOOD\""), response.body());
+        assertTrue(response.body().contains("\"name\":\"Alimentação\""), response.body());
+        assertTrue(response.body().contains("\"code\":\"TRANSPORT\""), response.body());
+        assertTrue(response.body().contains("\"code\":\"RENT\""), response.body());
+        assertTrue(response.body().contains("\"code\":\"LEISURE\""), response.body());
+        assertTrue(response.body().contains("\"code\":\"HEALTH\""), response.body());
+        assertTrue(response.body().contains("\"code\":\"OTHER\""), response.body());
+        assertTrue(response.body().contains("\"defaultCategory\":true"), response.body());
+    }
+
+    @Test
+    void customCategoryCanBeRenamedAndOnlyDeletedWhenUnused()
+            throws IOException, InterruptedException {
+        var created = post("/api/v1/finance/categories", """
+                { "name": "Academia" }
+                """);
+        assertEquals(201, created.statusCode());
+        var categoryId = extract(created.body(), NUMERIC_ID_PATTERN);
+        var categoryCode = extract(created.body(), CATEGORY_CODE_PATTERN);
+        assertTrue(categoryCode.startsWith("CUSTOM_"), created.body());
+        assertTrue(created.body().contains("\"defaultCategory\":false"), created.body());
+
+        var expense = post("/api/v1/finance/expenses", """
+                {
+                  "description": "Mensalidade da academia",
+                  "amount": 120.00,
+                  "transactionDate": "2026-07-10",
+                  "category": "%s"
+                }
+                """.formatted(categoryCode));
+        assertEquals(201, expense.statusCode());
+        var expenseId = extractId(expense.body());
+
+        var renamed = put("/api/v1/finance/categories/" + categoryId, """
+                { "name": "Saúde e academia" }
+                """);
+        assertEquals(200, renamed.statusCode());
+        assertTrue(renamed.body().contains("Saúde e academia"), renamed.body());
+        assertTrue(renamed.body().contains(categoryCode), renamed.body());
+
+        var deleteInUse = delete("/api/v1/finance/categories/" + categoryId);
+        assertEquals(400, deleteInUse.statusCode());
+        assertTrue(deleteInUse.body().contains("Categories in use cannot be deleted"),
+                deleteInUse.body());
+
+        assertEquals(204, delete("/api/v1/finance/expenses/" + expenseId).statusCode());
+        assertEquals(204, delete("/api/v1/finance/categories/" + categoryId).statusCode());
+        assertTrue(!get("/api/v1/finance/categories").body().contains(categoryCode));
     }
 
     @Test
@@ -364,6 +647,7 @@ class FinanceControlFinanceServiceApplicationTests {
                 """);
 
         assertEquals(200, setResponse.statusCode());
+        assertTrue(setResponse.body().contains("\"name\":\"Alimentação\""), setResponse.body());
         assertTrue(setResponse.body().contains("\"planned\":500.00"), setResponse.body());
         assertTrue(setResponse.body().contains("\"spent\":125.00"), setResponse.body());
         assertTrue(setResponse.body().contains("\"remaining\":375.00"), setResponse.body());
@@ -380,6 +664,8 @@ class FinanceControlFinanceServiceApplicationTests {
         assertTrue(openApiResponse.body().contains("/api/v1/finance/incomes"));
         assertTrue(openApiResponse.body().contains("/api/v1/finance/expenses"));
         assertTrue(openApiResponse.body().contains("/api/v1/finance/categories"));
+        assertTrue(openApiResponse.body().contains("/api/v1/finance/goals"));
+        assertTrue(openApiResponse.body().contains("/api/v1/finance/projections/cash-flow"));
         assertEquals(200, swaggerResponse.statusCode());
         assertTrue(swaggerResponse.body().contains("Swagger UI"));
     }
@@ -400,6 +686,16 @@ class FinanceControlFinanceServiceApplicationTests {
 
     private HttpResponse<String> post(String path, String body) throws IOException, InterruptedException {
         return send("POST", path, body);
+    }
+
+    private CompletableFuture<HttpResponse<String>> postAsync(String path, String body) {
+        var request = HttpRequest.newBuilder()
+                .uri(URI.create("http://127.0.0.1:" + port + path))
+                .header("X-Finance-Control-User-Id", DEMO_USER_ID)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString());
     }
 
     private HttpResponse<String> put(String path, String body) throws IOException, InterruptedException {
@@ -434,6 +730,12 @@ class FinanceControlFinanceServiceApplicationTests {
 
     private static String extractId(String body) {
         var matcher = ID_PATTERN.matcher(body);
+        assertTrue(matcher.find(), body);
+        return matcher.group(1);
+    }
+
+    private static String extract(String body, Pattern pattern) {
+        var matcher = pattern.matcher(body);
         assertTrue(matcher.find(), body);
         return matcher.group(1);
     }

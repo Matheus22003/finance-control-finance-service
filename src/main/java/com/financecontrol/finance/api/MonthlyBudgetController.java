@@ -5,7 +5,6 @@ import java.util.UUID;
 
 import com.financecontrol.finance.contract.budget.BudgetRequest;
 import com.financecontrol.finance.contract.budget.MonthlyBudgetResponse;
-import com.financecontrol.finance.domain.Category;
 import com.financecontrol.finance.service.MonthlyBudgetService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -47,7 +46,7 @@ public class MonthlyBudgetController {
     @Operation(summary = "Create or replace a category budget")
     public MonthlyBudgetResponse set(
             @RequestHeader(USER_ID_HEADER) UUID userId,
-            @PathVariable Category category,
+            @PathVariable String category,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM") YearMonth month,
             @Valid @RequestBody BudgetRequest request) {
         return budgetService.set(userId, month, category, request);
@@ -57,7 +56,7 @@ public class MonthlyBudgetController {
     @Operation(summary = "Remove a category budget")
     public MonthlyBudgetResponse delete(
             @RequestHeader(USER_ID_HEADER) UUID userId,
-            @PathVariable Category category,
+            @PathVariable String category,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM") YearMonth month) {
         return budgetService.delete(userId, month, category);
     }

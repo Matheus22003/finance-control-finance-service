@@ -8,7 +8,6 @@ import java.util.UUID;
 import com.financecontrol.finance.contract.expense.ExpenseRequest;
 import com.financecontrol.finance.contract.expense.ExpenseResponse;
 import com.financecontrol.finance.domain.Expense;
-import com.financecontrol.finance.domain.Category;
 import com.financecontrol.finance.repository.ExpenseRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Sort;
@@ -20,12 +19,15 @@ public class ExpenseService {
 
     private final ExpenseRepository expenseRepository;
     private final RecurringTransactionService recurringTransactionService;
+    private final CategoryService categoryService;
 
     public ExpenseService(
             ExpenseRepository expenseRepository,
-            RecurringTransactionService recurringTransactionService) {
+            RecurringTransactionService recurringTransactionService,
+            CategoryService categoryService) {
         this.expenseRepository = expenseRepository;
         this.recurringTransactionService = recurringTransactionService;
+        this.categoryService = categoryService;
     }
 
     @Transactional
@@ -38,7 +40,7 @@ public class ExpenseService {
             UUID ownerUserId,
             LocalDate fromDate,
             LocalDate toDate,
-            Category category) {
+            String category) {
         validateRange(fromDate, toDate);
         recurringTransactionService.materializeDueForUser(ownerUserId);
         Specification<Expense> specification = (root, query, criteriaBuilder) ->
@@ -51,9 +53,10 @@ public class ExpenseService {
             specification = specification.and((root, query, criteriaBuilder) ->
                     criteriaBuilder.lessThanOrEqualTo(root.get("transactionDate"), toDate));
         }
-        if (category != null) {
+        if (category != null && !category.isBlank()) {
+            var categoryCode = categoryService.requireCategory(ownerUserId, category);
             specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.equal(root.get("category"), category));
+                    criteriaBuilder.equal(root.get("category"), categoryCode));
         }
         var sort = Sort.by(
                 Sort.Order.desc("transactionDate"),
@@ -76,7 +79,7 @@ public class ExpenseService {
                 request.description().trim(),
                 request.amount().setScale(2, RoundingMode.UNNECESSARY),
                 request.transactionDate(),
-                request.category());
+                categoryService.requireCategory(ownerUserId, request.category()));
 
         return ExpenseResponse.from(expenseRepository.save(expense));
     }
@@ -88,7 +91,7 @@ public class ExpenseService {
                 request.description().trim(),
                 request.amount().setScale(2, RoundingMode.UNNECESSARY),
                 request.transactionDate(),
-                request.category());
+                categoryService.requireCategory(ownerUserId, request.category()));
 
         return ExpenseResponse.from(expenseRepository.saveAndFlush(expense));
     }

@@ -2,10 +2,9 @@ package com.financecontrol.finance.contract.budget;
 
 import java.math.BigDecimal;
 
-import com.financecontrol.finance.domain.Category;
-
 public record BudgetCategoryResponse(
-        Category category,
+        String category,
+        String name,
         BigDecimal planned,
         BigDecimal spent,
         BigDecimal remaining,

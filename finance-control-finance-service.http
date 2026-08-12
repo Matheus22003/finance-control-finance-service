@@ -1,4 +1,7 @@
 @host = http://localhost:8081
+@userId = 7f805b46-0b56-4a5d-86eb-d4f53c92db93
+@goalId = 00000000-0000-0000-0000-000000000000
+@contributionId = 00000000-0000-0000-0000-000000000000
 
 ### Health
 GET {{host}}/health
@@ -69,6 +72,27 @@ Content-Type: application/json
 ### List categories
 GET {{host}}/api/v1/finance/categories
 Accept: application/json
+
+### List financial goal contributions
+GET {{host}}/api/v1/finance/goals/{{goalId}}/contributions
+X-Finance-Control-User-Id: {{userId}}
+Accept: application/json
+
+### Register financial goal contribution
+POST {{host}}/api/v1/finance/goals/{{goalId}}/contributions
+X-Finance-Control-User-Id: {{userId}}
+Content-Type: application/json
+
+{
+  "amount": 500.00,
+  "contributionDate": "2026-08-11",
+  "note": "Monthly savings",
+  "sourceIncomeId": "{{incomeId}}"
+}
+
+### Delete financial goal contribution
+DELETE {{host}}/api/v1/finance/goals/{{goalId}}/contributions/{{contributionId}}
+X-Finance-Control-User-Id: {{userId}}
 
 ### Monthly finance summary
 GET {{host}}/api/v1/finance/summary?month=2026-07

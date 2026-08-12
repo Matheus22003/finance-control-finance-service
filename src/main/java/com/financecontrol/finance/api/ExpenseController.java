@@ -7,7 +7,6 @@ import java.util.UUID;
 
 import com.financecontrol.finance.contract.expense.ExpenseRequest;
 import com.financecontrol.finance.contract.expense.ExpenseResponse;
-import com.financecontrol.finance.domain.Category;
 import com.financecontrol.finance.service.ExpenseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -48,7 +47,7 @@ public class ExpenseController {
             @RequestHeader(USER_ID_HEADER) UUID userId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            @RequestParam(required = false) Category category) {
+            @RequestParam(required = false) String category) {
         return expenseService.findAll(userId, from, to, category);
     }
 

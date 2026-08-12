@@ -22,6 +22,7 @@ Microserviço responsável pelo domínio financeiro pessoal: receitas, despesas,
 | `GET` | `/health` | Estado da aplicação |
 | `GET` | `/api/v1/finance/incomes` | Lista receitas |
 | `GET` | `/api/v1/finance/incomes/{id}` | Consulta uma receita |
+| `GET` | `/api/v1/finance/incomes/{id}/goal-allocations` | Detalha as metas e os aportes que consomem a receita |
 | `POST` | `/api/v1/finance/incomes` | Cria uma receita |
 | `PUT` | `/api/v1/finance/incomes/{id}` | Atualiza uma receita |
 | `DELETE` | `/api/v1/finance/incomes/{id}` | Exclui uma receita |
@@ -38,15 +39,34 @@ Microserviço responsável pelo domínio financeiro pessoal: receitas, despesas,
 | `PUT` | `/api/v1/finance/budgets/{category}?month=yyyy-MM` | Define o limite mensal da categoria |
 | `DELETE` | `/api/v1/finance/budgets/{category}?month=yyyy-MM` | Remove o limite da categoria |
 | `GET` | `/api/v1/finance/categories` | Lista categorias de despesa |
+| `POST` | `/api/v1/finance/categories` | Cria uma categoria personalizada |
+| `PUT` | `/api/v1/finance/categories/{id}` | Renomeia uma categoria personalizada |
+| `DELETE` | `/api/v1/finance/categories/{id}` | Exclui uma categoria personalizada sem vínculos |
 | `GET` | `/api/v1/finance/summary?month=yyyy-MM` | Calcula o resumo mensal |
+| `GET` | `/api/v1/finance/trends?month=yyyy-MM&months=6` | Retorna a evolução de receitas, despesas e saldo de 2 a 12 meses |
+| `GET` | `/api/v1/finance/goals` | Lista as metas financeiras do usuário |
+| `POST` | `/api/v1/finance/goals` | Cria uma meta financeira |
+| `GET` | `/api/v1/finance/goals/{id}` | Consulta uma meta financeira |
+| `PUT` | `/api/v1/finance/goals/{id}` | Atualiza nome, objetivo e prazo |
+| `DELETE` | `/api/v1/finance/goals/{id}` | Exclui uma meta financeira |
+| `GET` | `/api/v1/finance/goals/{id}/contributions` | Lista o histórico de aportes da meta |
+| `POST` | `/api/v1/finance/goals/{id}/contributions` | Registra um aporte manual ou vinculado a uma receita e recalcula o progresso |
+| `DELETE` | `/api/v1/finance/goals/{id}/contributions/{contributionId}` | Remove um aporte e recalcula o progresso |
+| `GET` | `/api/v1/finance/projections/cash-flow?months=6` | Projeta de 1 a 12 meses usando lançamentos registrados e recorrências futuras |
 | `GET` | `/openapi/v1.json` | Documento OpenAPI |
 | `GET` | `/swagger` | Swagger UI |
 
-O endpoint interno `DELETE /api/v1/internal/account-data` exclui todas as receitas e despesas privadas do usuário do header interno.
+O endpoint interno `DELETE /api/v1/internal/account-data` exclui receitas, despesas, recorrências, orçamentos e metas privadas do usuário do header interno.
 
-O parâmetro `month` é opcional. Quando omitido, o resumo usa o mês atual em UTC.
+O parâmetro `month` é opcional. Quando omitido, resumo, tendência e orçamento usam o mês atual em UTC. A tendência termina no mês de referência e aceita de 2 a 12 meses consecutivos.
 
 As listagens aceitam filtros inclusivos: `from` e `to` no formato `yyyy-MM-dd`; despesas também aceitam `category`. Regras recorrentes materializam ocorrências vencidas de forma idempotente ao serem criadas, ao consultar dados do usuário e diariamente às `00:05`.
+
+O valor atual de uma meta é controlado pelo ledger de aportes. A criação aceita um saldo inicial; depois disso, alterações de progresso usam os endpoints de `contributions`, preservando data e observação de cada movimentação. Um aporte pode informar `sourceIncomeId`; o serviço valida que a receita pertence ao mesmo usuário e grava um snapshot da descrição, valor e data para manter a rastreabilidade mesmo se a receita for alterada ou removida posteriormente.
+
+Receitas retornam `goalAllocatedAmount` e `goalAvailableAmount`. A soma dos aportes vinculados nunca pode ultrapassar o valor da receita, inclusive em requisições concorrentes, e a receita não pode ser reduzida para um valor inferior ao que já está reservado em metas. Excluir um aporte libera novamente o respectivo valor.
+
+Cada usuário possui as seis categorias padrão e pode criar categorias próprias. Os códigos são estáveis para preservar relatórios ao renomear; categorias padrão são protegidas e categorias personalizadas só podem ser excluídas quando não possuem despesas, orçamentos ou recorrências vinculadas.
 
 O Finance Service não emite nem valida JWT. A autenticação é responsabilidade exclusiva do BFF, e no Docker Compose este serviço permanece em rede interna.
 O endpoint de ciclo de vida é idempotente e recebe `X-Finance-Control-User-Id` somente pela rede interna.
@@ -60,6 +80,10 @@ Migration atual:
 - `V1__create_finance_tables.sql`: tabelas `incomes` e `expenses`, constraints e índices.
 - `V2__scope_finance_data_by_user.sql`: isolamento das receitas e despesas pelo proprietário.
 - `V3__add_budgets_and_recurring_transactions.sql`: regras recorrentes, ocorrências e orçamentos mensais.
+- `V4__add_financial_goals.sql`: metas financeiras isoladas por usuário, constraints e índice por prazo.
+- `V5__add_financial_goal_contributions.sql`: ledger de aportes com backfill do saldo inicial, isolamento por usuário e atualização segura do progresso.
+- `V6__link_goal_contributions_to_incomes.sql`: vínculo opcional com receitas e snapshot auditável da origem do aporte.
+- `V7__add_custom_finance_categories.sql`: catálogo de categorias por usuário, backfill dos códigos padrão e integridade referencial para despesas, orçamentos e recorrências.
 
 Variáveis de conexão:
 

@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import com.financecontrol.finance.domain.Category;
 import com.financecontrol.finance.domain.Expense;
 
 public record ExpenseResponse(
@@ -13,7 +12,7 @@ public record ExpenseResponse(
         String description,
         BigDecimal amount,
         LocalDate transactionDate,
-        Category category,
+        String category,
         UUID recurringTransactionId,
         Instant createdAt,
         Instant updatedAt) {
