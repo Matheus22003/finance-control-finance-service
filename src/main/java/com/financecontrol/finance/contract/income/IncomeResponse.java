@@ -14,9 +14,13 @@ public record IncomeResponse(
         LocalDate transactionDate,
         UUID recurringTransactionId,
         Instant createdAt,
-        Instant updatedAt) {
+        Instant updatedAt,
+        BigDecimal goalAllocatedAmount,
+        BigDecimal goalAvailableAmount) {
 
-    public static IncomeResponse from(Income income) {
+    public static IncomeResponse from(Income income, BigDecimal goalAllocatedAmount) {
+        var allocatedAmount = goalAllocatedAmount.setScale(2);
+        var availableAmount = income.getAmount().subtract(allocatedAmount).max(BigDecimal.ZERO);
         return new IncomeResponse(
                 income.getId(),
                 income.getDescription(),
@@ -24,6 +28,8 @@ public record IncomeResponse(
                 income.getTransactionDate(),
                 income.getRecurringTransactionId(),
                 income.getCreatedAt(),
-                income.getUpdatedAt());
+                income.getUpdatedAt(),
+                allocatedAmount,
+                availableAmount.setScale(2));
     }
 }

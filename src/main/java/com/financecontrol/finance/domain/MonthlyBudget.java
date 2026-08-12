@@ -8,8 +8,6 @@ import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -36,9 +34,8 @@ public class MonthlyBudget {
     @Column(name = "reference_month", nullable = false, updatable = false)
     private LocalDate referenceMonth;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20, updatable = false)
-    private Category category;
+    @Column(nullable = false, length = 50, updatable = false)
+    private String category;
 
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
@@ -52,7 +49,7 @@ public class MonthlyBudget {
     protected MonthlyBudget() {
     }
 
-    public MonthlyBudget(UUID ownerUserId, YearMonth referenceMonth, Category category, BigDecimal amount) {
+    public MonthlyBudget(UUID ownerUserId, YearMonth referenceMonth, String category, BigDecimal amount) {
         this.ownerUserId = ownerUserId;
         this.referenceMonth = referenceMonth.atDay(1);
         this.category = category;
@@ -78,7 +75,7 @@ public class MonthlyBudget {
     public UUID getId() { return id; }
     public UUID getOwnerUserId() { return ownerUserId; }
     public YearMonth getReferenceMonth() { return YearMonth.from(referenceMonth); }
-    public Category getCategory() { return category; }
+    public String getCategory() { return category; }
     public BigDecimal getAmount() { return amount; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }

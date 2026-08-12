@@ -5,11 +5,12 @@ import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.YearMonth;
 import java.util.ArrayList;
-import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.UUID;
 
+import com.financecontrol.finance.contract.FinanceTrendMonthResponse;
+import com.financecontrol.finance.contract.FinanceTrendResponse;
 import com.financecontrol.finance.contract.MonthlySummaryResponse;
-import com.financecontrol.finance.domain.Category;
 import com.financecontrol.finance.repository.ExpenseRepository;
 import com.financecontrol.finance.repository.IncomeRepository;
 import org.springframework.stereotype.Service;
@@ -22,19 +23,22 @@ public class FinanceSummaryService {
     private final ExpenseRepository expenseRepository;
     private final Clock clock;
     private final RecurringTransactionService recurringTransactionService;
+    private final CategoryService categoryService;
 
     public FinanceSummaryService(
             IncomeRepository incomeRepository,
             ExpenseRepository expenseRepository,
             Clock clock,
-            RecurringTransactionService recurringTransactionService) {
+            RecurringTransactionService recurringTransactionService,
+            CategoryService categoryService) {
         this.incomeRepository = incomeRepository;
         this.expenseRepository = expenseRepository;
         this.clock = clock;
         this.recurringTransactionService = recurringTransactionService;
+        this.categoryService = categoryService;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public MonthlySummaryResponse getCurrentMonthlySummary(UUID ownerUserId) {
         return getMonthlySummary(ownerUserId, YearMonth.now(clock));
     }
@@ -73,10 +77,11 @@ public class FinanceSummaryService {
         var endDate = referenceMonth.plusMonths(1).atDay(1);
         var totalIncome = asCurrency(incomeRepository.sumAmountBetween(ownerUserId, startDate, endDate));
         var totalExpenses = asCurrency(expenseRepository.sumAmountBetween(ownerUserId, startDate, endDate));
-        var expensesByCategory = new EnumMap<Category, BigDecimal>(Category.class);
-        for (var category : Category.values()) {
-            expensesByCategory.put(category, asCurrency(BigDecimal.ZERO));
-        }
+        var expensesByCategory = new LinkedHashMap<String, BigDecimal>();
+        categoryService.findEntities(ownerUserId)
+                .forEach(category -> expensesByCategory.put(
+                        category.getCode(),
+                        asCurrency(BigDecimal.ZERO)));
         expenseRepository.sumAmountByCategoryBetween(ownerUserId, startDate, endDate)
                 .forEach(total -> expensesByCategory.put(
                         total.getCategory(),
@@ -94,5 +99,3 @@ public class FinanceSummaryService {
         return value.setScale(2, RoundingMode.UNNECESSARY);
     }
 }
-import com.financecontrol.finance.contract.FinanceTrendMonthResponse;
-import com.financecontrol.finance.contract.FinanceTrendResponse;

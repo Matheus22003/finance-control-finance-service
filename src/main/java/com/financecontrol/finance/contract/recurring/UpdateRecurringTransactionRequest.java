@@ -3,7 +3,6 @@ package com.financecontrol.finance.contract.recurring;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import com.financecontrol.finance.domain.Category;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
@@ -20,7 +19,8 @@ public record UpdateRecurringTransactionRequest(
         @Digits(integer = 17, fraction = 2, message = "Amount must contain at most 17 integer and 2 decimal digits.")
         BigDecimal amount,
 
-        Category category,
+        @Size(max = 50, message = "Category code must contain at most 50 characters.")
+        String category,
         LocalDate endDate,
         boolean active) {
 }

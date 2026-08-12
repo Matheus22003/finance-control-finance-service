@@ -37,9 +37,8 @@ public class RecurringTransaction {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 
-    @Enumerated(EnumType.STRING)
-    @Column(length = 20)
-    private Category category;
+    @Column(length = 50)
+    private String category;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
@@ -71,7 +70,7 @@ public class RecurringTransaction {
             TransactionKind kind,
             String description,
             BigDecimal amount,
-            Category category,
+            String category,
             RecurrenceFrequency frequency,
             LocalDate startDate,
             LocalDate endDate) {
@@ -90,7 +89,7 @@ public class RecurringTransaction {
     public void update(
             String description,
             BigDecimal amount,
-            Category category,
+            String category,
             LocalDate endDate,
             boolean active) {
         this.description = description;
@@ -124,7 +123,7 @@ public class RecurringTransaction {
     public TransactionKind getKind() { return kind; }
     public String getDescription() { return description; }
     public BigDecimal getAmount() { return amount; }
-    public Category getCategory() { return category; }
+    public String getCategory() { return category; }
     public RecurrenceFrequency getFrequency() { return frequency; }
     public LocalDate getStartDate() { return startDate; }
     public LocalDate getNextOccurrenceDate() { return nextOccurrenceDate; }

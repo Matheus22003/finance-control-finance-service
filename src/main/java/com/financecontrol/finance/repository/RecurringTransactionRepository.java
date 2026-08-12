@@ -10,7 +10,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RecurringTransactionRepository extends JpaRepository<RecurringTransaction, UUID> {
 
+    boolean existsByOwnerUserIdAndCategory(UUID ownerUserId, String category);
+
     List<RecurringTransaction> findAllByOwnerUserIdOrderByCreatedAtDesc(UUID ownerUserId);
+
+    List<RecurringTransaction> findAllByOwnerUserIdAndActiveTrueOrderByCreatedAtDesc(UUID ownerUserId);
 
     Optional<RecurringTransaction> findByIdAndOwnerUserId(UUID id, UUID ownerUserId);
 

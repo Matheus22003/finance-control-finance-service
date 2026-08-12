@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.financecontrol.finance.domain.Category;
 import com.financecontrol.finance.domain.Expense;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -22,6 +21,8 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID>, JpaSpec
     long deleteByOwnerUserId(UUID ownerUserId);
 
     boolean existsByRecurringTransactionIdAndOccurrenceDate(UUID recurringTransactionId, LocalDate occurrenceDate);
+
+    boolean existsByOwnerUserIdAndCategory(UUID ownerUserId, String category);
 
     @Query("""
             SELECT COALESCE(SUM(expense.amount), 0)
@@ -49,7 +50,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID>, JpaSpec
             @Param("endDate") LocalDate endDate);
 
     interface CategoryTotal {
-        Category getCategory();
+        String getCategory();
 
         BigDecimal getTotal();
     }

@@ -7,8 +7,6 @@ import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -42,9 +40,8 @@ public class Expense {
     @Column(name = "occurrence_date")
     private LocalDate occurrenceDate;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private Category category;
+    @Column(nullable = false, length = 50)
+    private String category;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -60,7 +57,7 @@ public class Expense {
             String description,
             BigDecimal amount,
             LocalDate transactionDate,
-            Category category) {
+            String category) {
         this(ownerUserId, description, amount, transactionDate, category, null, null);
     }
 
@@ -69,7 +66,7 @@ public class Expense {
             String description,
             BigDecimal amount,
             LocalDate transactionDate,
-            Category category,
+            String category,
             UUID recurringTransactionId,
             LocalDate occurrenceDate) {
         this.ownerUserId = ownerUserId;
@@ -85,7 +82,7 @@ public class Expense {
             String description,
             BigDecimal amount,
             LocalDate transactionDate,
-            Category category) {
+            String category) {
         this.description = description;
         this.amount = amount;
         this.transactionDate = transactionDate;
@@ -124,7 +121,7 @@ public class Expense {
         return transactionDate;
     }
 
-    public Category getCategory() {
+    public String getCategory() {
         return category;
     }
 
