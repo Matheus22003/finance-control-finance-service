@@ -127,6 +127,13 @@ mvn --batch-mode --no-transfer-progress clean verify
 docker build --tag finance-control-finance-service:local .
 ```
 
+## Integração contínua
+
+O workflow `.github/workflows/ci.yml` é executado em pushes e pull requests para
+`main` e `develop`, além de permitir execução manual. A pipeline usa o próprio
+Dockerfile, que fixa Maven `3.9.12` e Java `21`, para compilar o serviço, executar
+os testes e validar a imagem final.
+
 ## Versões diretas
 
 Dependências:
