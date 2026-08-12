@@ -93,7 +93,17 @@ public class RecurringTransactionService {
 
     @Transactional
     public void delete(UUID ownerUserId, UUID id) {
-        recurringRepository.delete(findEntity(ownerUserId, id));
+        var recurring = findEntity(ownerUserId, id);
+        var incomes = incomeRepository.findAllByRecurringTransactionId(recurring.getId());
+        incomes.forEach(Income::detachFromRecurrence);
+        incomeRepository.saveAllAndFlush(incomes);
+
+        var expenses = expenseRepository.findAllByRecurringTransactionId(recurring.getId());
+        expenses.forEach(Expense::detachFromRecurrence);
+        expenseRepository.saveAllAndFlush(expenses);
+
+        recurringRepository.delete(recurring);
+        recurringRepository.flush();
     }
 
     @Transactional

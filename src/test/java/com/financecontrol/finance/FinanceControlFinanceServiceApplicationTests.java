@@ -628,6 +628,35 @@ class FinanceControlFinanceServiceApplicationTests {
     }
 
     @Test
+    void deletingRecurringRuleKeepsGeneratedTransactions() throws IOException, InterruptedException {
+        var today = LocalDate.now();
+        var description = "Income preserved after recurrence deletion";
+        var createResponse = post("/api/v1/finance/recurring-transactions", """
+                {
+                  "kind": "INCOME",
+                  "description": "%s",
+                  "amount": 321.00,
+                  "category": null,
+                  "frequency": "MONTHLY",
+                  "startDate": "%s",
+                  "endDate": null
+                }
+                """.formatted(description, today));
+        assertEquals(201, createResponse.statusCode());
+        var recurringId = extractId(createResponse.body());
+
+        var deleteResponse = delete("/api/v1/finance/recurring-transactions/" + recurringId);
+
+        assertEquals(204, deleteResponse.statusCode(), deleteResponse.body());
+        var recurringList = get("/api/v1/finance/recurring-transactions");
+        assertEquals(200, recurringList.statusCode());
+        assertTrue(!recurringList.body().contains(description), recurringList.body());
+        var incomes = get("/api/v1/finance/incomes?from=" + today + "&to=" + today);
+        assertEquals(200, incomes.statusCode());
+        assertTrue(incomes.body().contains(description), incomes.body());
+    }
+
+    @Test
     void monthlyBudgetCombinesPlannedAndSpentAmounts() throws IOException, InterruptedException {
         var today = LocalDate.now();
         var month = YearMonth.from(today);

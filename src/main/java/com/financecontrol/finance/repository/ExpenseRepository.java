@@ -18,6 +18,8 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID>, JpaSpec
 
     Optional<Expense> findByIdAndOwnerUserId(UUID id, UUID ownerUserId);
 
+    List<Expense> findAllByRecurringTransactionId(UUID recurringTransactionId);
+
     long deleteByOwnerUserId(UUID ownerUserId);
 
     boolean existsByRecurringTransactionIdAndOccurrenceDate(UUID recurringTransactionId, LocalDate occurrenceDate);
