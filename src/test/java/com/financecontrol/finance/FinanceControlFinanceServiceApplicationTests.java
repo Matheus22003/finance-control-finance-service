@@ -8,6 +8,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
@@ -27,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
+import tools.jackson.databind.ObjectMapper;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -64,6 +67,9 @@ class FinanceControlFinanceServiceApplicationTests {
 
     @Autowired
     private FinanceCategoryRepository financeCategoryRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     void cleanDatabase() {
@@ -697,6 +703,32 @@ class FinanceControlFinanceServiceApplicationTests {
         assertTrue(openApiResponse.body().contains("/api/v1/finance/projections/cash-flow"));
         assertEquals(200, swaggerResponse.statusCode());
         assertTrue(swaggerResponse.body().contains("Swagger UI"));
+    }
+
+    @Test
+    void runtimeOpenApiMatchesVersionedContract() throws IOException, InterruptedException {
+        var response = get("/openapi/v1.json");
+        assertEquals(200, response.statusCode());
+
+        var actual = objectMapper.readTree(response.body());
+        var updatePath = System.getenv("OPENAPI_CONTRACT_UPDATE_PATH");
+        if (updatePath != null && !updatePath.isBlank()) {
+            var contractPath = Path.of(updatePath);
+            Files.createDirectories(contractPath.getParent());
+            Files.writeString(
+                    contractPath,
+                    objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(actual)
+                            + System.lineSeparator());
+            return;
+        }
+
+        var contractPath = Path.of("openapi", "openapi-v1.json");
+        var expected = objectMapper.readTree(Files.readString(contractPath));
+        assertEquals(
+                expected,
+                actual,
+                "The runtime OpenAPI document changed. Run "
+                        + "scripts/update-openapi-contract.ps1, review the diff and commit it.");
     }
 
     @Test
