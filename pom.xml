@@ -13,7 +13,7 @@
 
   <groupId>com.financecontrol</groupId>
   <artifactId>finance-control-finance-service</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.1.0</version>
   <name>Finance Control - Finance Service</name>
   <description>Personal finance microservice for Finance Control.</description>
 

@@ -89,6 +89,11 @@ public class Expense {
         this.category = category;
     }
 
+    public void detachFromRecurrence() {
+        recurringTransactionId = null;
+        occurrenceDate = null;
+    }
+
     @PrePersist
     void onCreate() {
         var now = Instant.now();

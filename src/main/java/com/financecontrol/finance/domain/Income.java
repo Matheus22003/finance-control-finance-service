@@ -74,6 +74,11 @@ public class Income {
         this.transactionDate = transactionDate;
     }
 
+    public void detachFromRecurrence() {
+        recurringTransactionId = null;
+        occurrenceDate = null;
+    }
+
     @PrePersist
     void onCreate() {
         var now = Instant.now();

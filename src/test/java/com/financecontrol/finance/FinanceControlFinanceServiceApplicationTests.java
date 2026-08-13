@@ -8,6 +8,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
@@ -27,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
+import tools.jackson.databind.ObjectMapper;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -64,6 +67,9 @@ class FinanceControlFinanceServiceApplicationTests {
 
     @Autowired
     private FinanceCategoryRepository financeCategoryRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     void cleanDatabase() {
@@ -628,6 +634,35 @@ class FinanceControlFinanceServiceApplicationTests {
     }
 
     @Test
+    void deletingRecurringRuleKeepsGeneratedTransactions() throws IOException, InterruptedException {
+        var today = LocalDate.now();
+        var description = "Income preserved after recurrence deletion";
+        var createResponse = post("/api/v1/finance/recurring-transactions", """
+                {
+                  "kind": "INCOME",
+                  "description": "%s",
+                  "amount": 321.00,
+                  "category": null,
+                  "frequency": "MONTHLY",
+                  "startDate": "%s",
+                  "endDate": null
+                }
+                """.formatted(description, today));
+        assertEquals(201, createResponse.statusCode());
+        var recurringId = extractId(createResponse.body());
+
+        var deleteResponse = delete("/api/v1/finance/recurring-transactions/" + recurringId);
+
+        assertEquals(204, deleteResponse.statusCode(), deleteResponse.body());
+        var recurringList = get("/api/v1/finance/recurring-transactions");
+        assertEquals(200, recurringList.statusCode());
+        assertTrue(!recurringList.body().contains(description), recurringList.body());
+        var incomes = get("/api/v1/finance/incomes?from=" + today + "&to=" + today);
+        assertEquals(200, incomes.statusCode());
+        assertTrue(incomes.body().contains(description), incomes.body());
+    }
+
+    @Test
     void monthlyBudgetCombinesPlannedAndSpentAmounts() throws IOException, InterruptedException {
         var today = LocalDate.now();
         var month = YearMonth.from(today);
@@ -671,13 +706,48 @@ class FinanceControlFinanceServiceApplicationTests {
     }
 
     @Test
+    void runtimeOpenApiMatchesVersionedContract() throws IOException, InterruptedException {
+        var response = get("/openapi/v1.json");
+        assertEquals(200, response.statusCode());
+
+        var actual = objectMapper.readTree(response.body());
+        var updatePath = System.getenv("OPENAPI_CONTRACT_UPDATE_PATH");
+        if (updatePath != null && !updatePath.isBlank()) {
+            var contractPath = Path.of(updatePath);
+            Files.createDirectories(contractPath.getParent());
+            Files.writeString(
+                    contractPath,
+                    objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(actual)
+                            + System.lineSeparator());
+            return;
+        }
+
+        var contractPath = Path.of("openapi", "openapi-v1.json");
+        var expected = objectMapper.readTree(Files.readString(contractPath));
+        assertEquals(
+                expected,
+                actual,
+                "The runtime OpenAPI document changed. Run "
+                        + "scripts/update-openapi-contract.ps1, review the diff and commit it.");
+    }
+
+    @Test
     void unknownResourceReturnsProblemDetails() throws IOException, InterruptedException {
-        var response = get("/api/v1/finance/unknown");
+        var correlationId = "61ec8ba6-c359-48c1-b2d7-f57ec7309369";
+        var request = HttpRequest.newBuilder()
+                .uri(URI.create("http://127.0.0.1:" + port + "/api/v1/finance/unknown"))
+                .header("X-Finance-Control-User-Id", DEMO_USER_ID)
+                .header("X-Correlation-ID", correlationId)
+                .GET()
+                .build();
+        var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(404, response.statusCode());
+        assertEquals(correlationId, response.headers().firstValue("X-Correlation-ID").orElseThrow());
         assertTrue(response.headers().firstValue("content-type").orElse("")
                 .startsWith("application/problem+json"));
         assertTrue(response.body().contains("\"title\":\"Resource not found\""), response.body());
+        assertTrue(response.body().contains("\"correlationId\":\"" + correlationId + "\""), response.body());
     }
 
     private HttpResponse<String> get(String path) throws IOException, InterruptedException {

@@ -4,6 +4,7 @@ FROM maven:3.9.12-eclipse-temurin-21-alpine@sha256:8b2f036477a5bc9fbeb16cfb7301c
 WORKDIR /workspace
 
 COPY pom.xml ./
+COPY openapi ./openapi
 COPY src ./src
 
 RUN --mount=type=cache,target=/root/.m2 \

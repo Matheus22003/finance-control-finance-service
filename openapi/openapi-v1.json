@@ -1,0 +1,2033 @@
+{
+  "openapi" : "3.1.0",
+  "info" : {
+    "title" : "Finance Control - Finance Service",
+    "description" : "Personal income, expense, category and monthly summary API.",
+    "version" : "v1"
+  },
+  "servers" : [ {
+    "url" : "/",
+    "description" : "Current host"
+  } ],
+  "tags" : [ {
+    "name" : "Expenses",
+    "description" : "Expense management"
+  }, {
+    "name" : "Financial goals",
+    "description" : "Personal savings goals and progress"
+  }, {
+    "name" : "Finance",
+    "description" : "Personal finance summaries"
+  }, {
+    "name" : "Categories",
+    "description" : "Available expense categories"
+  }, {
+    "name" : "Cash-flow projections",
+    "description" : "Forecasts based on recorded and recurring transactions"
+  }, {
+    "name" : "Financial goal contributions",
+    "description" : "Immutable savings goal ledger"
+  }, {
+    "name" : "Recurring transactions",
+    "description" : "Recurring income and expense management"
+  }, {
+    "name" : "Monthly budgets",
+    "description" : "Monthly expense limits by category"
+  }, {
+    "name" : "Internal",
+    "description" : "Internal account data lifecycle"
+  }, {
+    "name" : "Incomes",
+    "description" : "Income management"
+  } ],
+  "paths" : {
+    "/api/v1/finance/recurring-transactions/{id}" : {
+      "put" : {
+        "tags" : [ "Recurring transactions" ],
+        "summary" : "Update or pause a recurring transaction",
+        "operationId" : "update",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateRecurringTransactionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RecurringTransactionResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Recurring transactions" ],
+        "summary" : "Delete a recurring rule without deleting generated entries",
+        "operationId" : "delete",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/incomes/{id}" : {
+      "get" : {
+        "tags" : [ "Incomes" ],
+        "summary" : "Get an income by id",
+        "operationId" : "findById",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "404" : {
+            "description" : "Income not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IncomeResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "Incomes" ],
+        "summary" : "Update an income",
+        "operationId" : "update_1",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/IncomeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "400" : {
+            "description" : "Invalid income",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IncomeResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Income not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IncomeResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Incomes" ],
+        "summary" : "Delete an income",
+        "operationId" : "delete_1",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Income deleted"
+          },
+          "404" : {
+            "description" : "Income not found"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/goals/{id}" : {
+      "get" : {
+        "tags" : [ "Financial goals" ],
+        "summary" : "Get a financial goal",
+        "operationId" : "findById_1",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "404" : {
+            "description" : "Financial goal not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FinancialGoalResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "Financial goals" ],
+        "summary" : "Update a financial goal",
+        "operationId" : "update_2",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FinancialGoalRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "404" : {
+            "description" : "Financial goal not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FinancialGoalResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Financial goals" ],
+        "summary" : "Delete a financial goal",
+        "operationId" : "delete_2",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Financial goal deleted"
+          },
+          "404" : {
+            "description" : "Financial goal not found"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/expenses/{id}" : {
+      "get" : {
+        "tags" : [ "Expenses" ],
+        "summary" : "Get an expense by id",
+        "operationId" : "findById_2",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "404" : {
+            "description" : "Expense not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExpenseResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "Expenses" ],
+        "summary" : "Update an expense",
+        "operationId" : "update_3",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ExpenseRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "400" : {
+            "description" : "Invalid expense",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExpenseResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Expense not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExpenseResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Expenses" ],
+        "summary" : "Delete an expense",
+        "operationId" : "delete_3",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Expense deleted"
+          },
+          "404" : {
+            "description" : "Expense not found"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/categories/{id}" : {
+      "put" : {
+        "tags" : [ "Categories" ],
+        "summary" : "Rename a custom expense category",
+        "operationId" : "update_4",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CategoryRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CategoryResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Categories" ],
+        "summary" : "Delete an unused custom expense category",
+        "operationId" : "delete_4",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/budgets/{category}" : {
+      "put" : {
+        "tags" : [ "Monthly budgets" ],
+        "summary" : "Create or replace a category budget",
+        "operationId" : "set",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "category",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "month",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BudgetRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MonthlyBudgetResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Monthly budgets" ],
+        "summary" : "Remove a category budget",
+        "operationId" : "delete_5",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "category",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "month",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MonthlyBudgetResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/recurring-transactions" : {
+      "get" : {
+        "tags" : [ "Recurring transactions" ],
+        "summary" : "List recurring transactions",
+        "operationId" : "findAll",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RecurringTransactionResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "Recurring transactions" ],
+        "summary" : "Create a recurring transaction",
+        "operationId" : "create",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RecurringTransactionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Recurring transaction created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RecurringTransactionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/incomes" : {
+      "get" : {
+        "tags" : [ "Incomes" ],
+        "summary" : "List all incomes",
+        "operationId" : "findAll_1",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "from",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "name" : "to",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/IncomeResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "Incomes" ],
+        "summary" : "Create an income",
+        "operationId" : "create_1",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/IncomeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Income created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IncomeResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid income",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IncomeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/goals" : {
+      "get" : {
+        "tags" : [ "Financial goals" ],
+        "summary" : "List financial goals",
+        "operationId" : "findAll_2",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/FinancialGoalResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "Financial goals" ],
+        "summary" : "Create a financial goal",
+        "operationId" : "create_2",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FinancialGoalRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Financial goal created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FinancialGoalResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/goals/{goalId}/contributions" : {
+      "get" : {
+        "tags" : [ "Financial goal contributions" ],
+        "summary" : "List a financial goal contribution history",
+        "operationId" : "findAll_3",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "goalId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "404" : {
+            "description" : "Financial goal not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/FinancialGoalContributionResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "Financial goal contributions" ],
+        "summary" : "Register a financial goal contribution",
+        "operationId" : "create_3",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "goalId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FinancialGoalContributionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Contribution registered",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FinancialGoalContributionResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Financial goal not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FinancialGoalContributionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/expenses" : {
+      "get" : {
+        "tags" : [ "Expenses" ],
+        "summary" : "List all expenses",
+        "operationId" : "findAll_4",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "from",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "name" : "to",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "name" : "category",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ExpenseResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "Expenses" ],
+        "summary" : "Create an expense",
+        "operationId" : "create_4",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ExpenseRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Expense created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExpenseResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid expense",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExpenseResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/categories" : {
+      "get" : {
+        "tags" : [ "Categories" ],
+        "summary" : "List all expense categories",
+        "operationId" : "findAll_5",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CategoryResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "Categories" ],
+        "summary" : "Create a custom expense category",
+        "operationId" : "create_5",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CategoryRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CategoryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/trends" : {
+      "get" : {
+        "tags" : [ "Finance" ],
+        "summary" : "Get income, expense and balance trends for consecutive months",
+        "operationId" : "getTrend",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "month",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "months",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 6,
+            "maximum" : 12,
+            "minimum" : 2
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Monthly trend returned successfully",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FinanceTrendResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid reference month or number of months",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FinanceTrendResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/summary" : {
+      "get" : {
+        "tags" : [ "Finance" ],
+        "summary" : "Get a monthly finance summary",
+        "operationId" : "getSummary",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "month",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Monthly summary returned successfully",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MonthlySummaryResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid reference month",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MonthlySummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/projections/cash-flow" : {
+      "get" : {
+        "tags" : [ "Cash-flow projections" ],
+        "summary" : "Project monthly cash flow",
+        "operationId" : "project",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "months",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 6,
+            "maximum" : 12,
+            "minimum" : 1
+          }
+        } ],
+        "responses" : {
+          "400" : {
+            "description" : "Invalid number of months",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CashFlowProjectionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/incomes/{id}/goal-allocations" : {
+      "get" : {
+        "tags" : [ "Incomes" ],
+        "summary" : "Show how an income is allocated across financial goals",
+        "operationId" : "findGoalAllocations",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "404" : {
+            "description" : "Income not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IncomeGoalAllocationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/budgets" : {
+      "get" : {
+        "tags" : [ "Monthly budgets" ],
+        "summary" : "Get monthly budget progress",
+        "operationId" : "get",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "month",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MonthlyBudgetResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/internal/account-data" : {
+      "delete" : {
+        "tags" : [ "Internal" ],
+        "summary" : "Delete all private finance data owned by a user",
+        "operationId" : "delete_6",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Account finance data deleted"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/goals/{goalId}/contributions/{contributionId}" : {
+      "delete" : {
+        "tags" : [ "Financial goal contributions" ],
+        "summary" : "Delete a financial goal contribution",
+        "operationId" : "delete_7",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "goalId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "contributionId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Contribution deleted"
+          },
+          "404" : {
+            "description" : "Goal or contribution not found"
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "UpdateRecurringTransactionRequest" : {
+        "type" : "object",
+        "properties" : {
+          "description" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "amount" : {
+            "type" : "number",
+            "minimum" : 0.01
+          },
+          "category" : {
+            "type" : "string",
+            "maxLength" : 50,
+            "minLength" : 0
+          },
+          "endDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "active" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "amount", "description" ]
+      },
+      "RecurringTransactionResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "INCOME", "EXPENSE" ]
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "amount" : {
+            "type" : "number"
+          },
+          "category" : {
+            "type" : "string"
+          },
+          "frequency" : {
+            "type" : "string",
+            "enum" : [ "WEEKLY", "MONTHLY", "YEARLY" ]
+          },
+          "startDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "nextOccurrenceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "endDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "active" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "IncomeRequest" : {
+        "type" : "object",
+        "properties" : {
+          "description" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "amount" : {
+            "type" : "number",
+            "minimum" : 0.01
+          },
+          "transactionDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "amount", "description", "transactionDate" ]
+      },
+      "IncomeResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "amount" : {
+            "type" : "number"
+          },
+          "transactionDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "recurringTransactionId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "goalAllocatedAmount" : {
+            "type" : "number"
+          },
+          "goalAvailableAmount" : {
+            "type" : "number"
+          }
+        }
+      },
+      "FinancialGoalRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "targetAmount" : {
+            "type" : "number",
+            "minimum" : 0.01
+          },
+          "currentAmount" : {
+            "type" : "number",
+            "minimum" : 0.0
+          },
+          "targetDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "currentAmount", "name", "targetAmount", "targetDate" ]
+      },
+      "FinancialGoalResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "targetAmount" : {
+            "type" : "number"
+          },
+          "currentAmount" : {
+            "type" : "number"
+          },
+          "remainingAmount" : {
+            "type" : "number"
+          },
+          "progressPercentage" : {
+            "type" : "number"
+          },
+          "targetDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "COMPLETED", "OVERDUE" ]
+          },
+          "requiredMonthlyContribution" : {
+            "type" : "number"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "ExpenseRequest" : {
+        "type" : "object",
+        "properties" : {
+          "description" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "amount" : {
+            "type" : "number",
+            "minimum" : 0.01
+          },
+          "transactionDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "category" : {
+            "type" : "string",
+            "maxLength" : 50,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "amount", "category", "description", "transactionDate" ]
+      },
+      "ExpenseResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "amount" : {
+            "type" : "number"
+          },
+          "transactionDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "category" : {
+            "type" : "string"
+          },
+          "recurringTransactionId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "CategoryRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 80,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "name" ]
+      },
+      "CategoryResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "defaultCategory" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "BudgetRequest" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "number",
+            "minimum" : 0.01
+          }
+        },
+        "required" : [ "amount" ]
+      },
+      "BudgetCategoryResponse" : {
+        "type" : "object",
+        "properties" : {
+          "category" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "planned" : {
+            "type" : "number"
+          },
+          "spent" : {
+            "type" : "number"
+          },
+          "remaining" : {
+            "type" : "number"
+          },
+          "usagePercentage" : {
+            "type" : "number"
+          }
+        }
+      },
+      "MonthlyBudgetResponse" : {
+        "type" : "object",
+        "properties" : {
+          "referenceMonth" : {
+            "type" : "string"
+          },
+          "totalPlanned" : {
+            "type" : "number"
+          },
+          "totalSpent" : {
+            "type" : "number"
+          },
+          "totalRemaining" : {
+            "type" : "number"
+          },
+          "categories" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BudgetCategoryResponse"
+            }
+          }
+        }
+      },
+      "RecurringTransactionRequest" : {
+        "type" : "object",
+        "properties" : {
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "INCOME", "EXPENSE" ]
+          },
+          "description" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "amount" : {
+            "type" : "number",
+            "minimum" : 0.01
+          },
+          "category" : {
+            "type" : "string",
+            "maxLength" : 50,
+            "minLength" : 0
+          },
+          "frequency" : {
+            "type" : "string",
+            "enum" : [ "WEEKLY", "MONTHLY", "YEARLY" ]
+          },
+          "startDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "endDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "categoryCompatibleWithKind" : {
+            "type" : "boolean"
+          },
+          "dateRangeValid" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "amount", "description", "frequency", "kind", "startDate" ]
+      },
+      "FinancialGoalContributionRequest" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "number",
+            "minimum" : 0.01
+          },
+          "contributionDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "sourceIncomeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "amount", "contributionDate" ]
+      },
+      "FinancialGoalContributionResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "financialGoalId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "amount" : {
+            "type" : "number"
+          },
+          "contributionDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "INITIAL", "CONTRIBUTION" ]
+          },
+          "source" : {
+            "$ref" : "#/components/schemas/FinancialGoalContributionSourceResponse"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "FinancialGoalContributionSourceResponse" : {
+        "type" : "object",
+        "properties" : {
+          "incomeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "incomeAmount" : {
+            "type" : "number"
+          },
+          "transactionDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }
+      },
+      "FinanceTrendMonthResponse" : {
+        "type" : "object",
+        "properties" : {
+          "referenceMonth" : {
+            "type" : "string"
+          },
+          "totalIncome" : {
+            "type" : "number"
+          },
+          "totalExpenses" : {
+            "type" : "number"
+          },
+          "balance" : {
+            "type" : "number"
+          }
+        }
+      },
+      "FinanceTrendResponse" : {
+        "type" : "object",
+        "properties" : {
+          "referenceMonth" : {
+            "type" : "string"
+          },
+          "months" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FinanceTrendMonthResponse"
+            }
+          }
+        }
+      },
+      "MonthlySummaryResponse" : {
+        "type" : "object",
+        "properties" : {
+          "referenceMonth" : {
+            "type" : "string"
+          },
+          "totalIncome" : {
+            "type" : "number"
+          },
+          "totalExpenses" : {
+            "type" : "number"
+          },
+          "balance" : {
+            "type" : "number"
+          },
+          "expensesByCategory" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "number"
+            }
+          }
+        }
+      },
+      "CashFlowProjectionMonthResponse" : {
+        "type" : "object",
+        "properties" : {
+          "referenceMonth" : {
+            "type" : "string"
+          },
+          "projectedIncome" : {
+            "type" : "number"
+          },
+          "projectedExpenses" : {
+            "type" : "number"
+          },
+          "projectedNet" : {
+            "type" : "number"
+          },
+          "cumulativeBalance" : {
+            "type" : "number"
+          }
+        }
+      },
+      "CashFlowProjectionResponse" : {
+        "type" : "object",
+        "properties" : {
+          "referenceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "months" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "currentRecordedBalance" : {
+            "type" : "number"
+          },
+          "totalProjectedIncome" : {
+            "type" : "number"
+          },
+          "totalProjectedExpenses" : {
+            "type" : "number"
+          },
+          "projectedCumulativeBalance" : {
+            "type" : "number"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CashFlowProjectionMonthResponse"
+            }
+          }
+        }
+      },
+      "IncomeGoalAllocationItemResponse" : {
+        "type" : "object",
+        "properties" : {
+          "contributionId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "financialGoalId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "financialGoalName" : {
+            "type" : "string"
+          },
+          "amount" : {
+            "type" : "number"
+          },
+          "contributionDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "IncomeGoalAllocationResponse" : {
+        "type" : "object",
+        "properties" : {
+          "incomeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "incomeDescription" : {
+            "type" : "string"
+          },
+          "incomeAmount" : {
+            "type" : "number"
+          },
+          "transactionDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "goalAllocatedAmount" : {
+            "type" : "number"
+          },
+          "goalAvailableAmount" : {
+            "type" : "number"
+          },
+          "allocations" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/IncomeGoalAllocationItemResponse"
+            }
+          }
+        }
+      }
+    }
+  }
+}

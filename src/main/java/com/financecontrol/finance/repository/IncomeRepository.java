@@ -20,6 +20,8 @@ public interface IncomeRepository extends JpaRepository<Income, UUID>, JpaSpecif
 
     Optional<Income> findByIdAndOwnerUserId(UUID id, UUID ownerUserId);
 
+    List<Income> findAllByRecurringTransactionId(UUID recurringTransactionId);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             SELECT income
