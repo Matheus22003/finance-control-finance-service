@@ -701,12 +701,21 @@ class FinanceControlFinanceServiceApplicationTests {
 
     @Test
     void unknownResourceReturnsProblemDetails() throws IOException, InterruptedException {
-        var response = get("/api/v1/finance/unknown");
+        var correlationId = "61ec8ba6-c359-48c1-b2d7-f57ec7309369";
+        var request = HttpRequest.newBuilder()
+                .uri(URI.create("http://127.0.0.1:" + port + "/api/v1/finance/unknown"))
+                .header("X-Finance-Control-User-Id", DEMO_USER_ID)
+                .header("X-Correlation-ID", correlationId)
+                .GET()
+                .build();
+        var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(404, response.statusCode());
+        assertEquals(correlationId, response.headers().firstValue("X-Correlation-ID").orElseThrow());
         assertTrue(response.headers().firstValue("content-type").orElse("")
                 .startsWith("application/problem+json"));
         assertTrue(response.body().contains("\"title\":\"Resource not found\""), response.body());
+        assertTrue(response.body().contains("\"correlationId\":\"" + correlationId + "\""), response.body());
     }
 
     private HttpResponse<String> get(String path) throws IOException, InterruptedException {

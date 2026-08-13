@@ -45,3 +45,8 @@ springdoc:
     path: /swagger
     disable-swagger-default-url: true
   packages-to-scan: com.financecontrol.finance.api
+
+logging:
+  structured:
+    format:
+      console: logstash

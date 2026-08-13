@@ -71,6 +71,14 @@ Cada usuário possui as seis categorias padrão e pode criar categorias própria
 O Finance Service não emite nem valida JWT. A autenticação é responsabilidade exclusiva do BFF, e no Docker Compose este serviço permanece em rede interna.
 O endpoint de ciclo de vida é idempotente e recebe `X-Finance-Control-User-Id` somente pela rede interna.
 
+## Observabilidade
+
+Cada requisição recebe um UUID no header `X-Correlation-ID`. O serviço preserva
+um valor válido propagado pelo BFF ou gera um novo, devolve-o na resposta e o
+inclui nas respostas ProblemDetails. Os logs de console usam JSON no formato
+Logstash e registram o ID de correlação, método, caminho, status HTTP e duração,
+sem registrar payloads ou identificadores financeiros.
+
 ## Persistência
 
 O schema é controlado exclusivamente pelo Flyway. O Hibernate usa `ddl-auto: validate` e não cria ou modifica tabelas automaticamente.

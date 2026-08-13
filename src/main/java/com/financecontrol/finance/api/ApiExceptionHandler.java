@@ -6,6 +6,7 @@ import java.util.Map;
 
 import com.financecontrol.finance.service.ResourceNotFoundException;
 import com.financecontrol.finance.service.DomainValidationException;
+import com.financecontrol.finance.observability.CorrelationIdFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.core.Ordered;
@@ -146,6 +147,7 @@ public class ApiExceptionHandler {
         var problemDetail = ProblemDetail.forStatusAndDetail(status, detail);
         problemDetail.setTitle(title);
         problemDetail.setInstance(URI.create(request.getRequestURI()));
+        problemDetail.setProperty("correlationId", CorrelationIdFilter.getCorrelationId(request));
         return problemDetail;
     }
 }
