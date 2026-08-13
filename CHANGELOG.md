@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-08-13
+
 ### Added
 
 - CRUD de receitas e despesas isolado por usuário;
@@ -15,4 +17,5 @@
 - OpenAPI, Swagger UI e proteção de contrato no CI;
 - imagem Docker com build e testes Maven integrados.
 
-[Unreleased]: https://github.com/Matheus22003/finance-control-finance-service/compare/main...develop
+[Unreleased]: https://github.com/Matheus22003/finance-control-finance-service/compare/v0.1.0...develop
+[0.1.0]: https://github.com/Matheus22003/finance-control-finance-service/releases/tag/v0.1.0
