@@ -142,6 +142,10 @@ O workflow `.github/workflows/ci.yml` é executado em pushes e pull requests par
 Dockerfile, que fixa Maven `3.9.12` e Java `21`, para compilar o serviço, executar
 os testes e validar a imagem final.
 
+O workflow `.github/workflows/publish-image.yml` publica no GHCR uma imagem
+multiarch `linux/amd64` e `linux/arm64` quando uma tag `v*` é criada ou por
+execução manual. A publicação inclui SBOM e proveniência do build.
+
 ## Versões diretas
 
 Dependências:
