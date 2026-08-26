@@ -37,6 +37,11 @@ public interface IncomeRepository extends JpaRepository<Income, UUID>, JpaSpecif
 
     boolean existsByRecurringTransactionIdAndOccurrenceDate(UUID recurringTransactionId, LocalDate occurrenceDate);
 
+    long countByOwnerUserIdAndTransactionDateGreaterThanEqualAndTransactionDateLessThan(
+            UUID ownerUserId,
+            LocalDate startDate,
+            LocalDate endDate);
+
     @Query("""
             SELECT COALESCE(SUM(income.amount), 0)
             FROM Income income
