@@ -37,6 +37,9 @@
     "name" : "Internal",
     "description" : "Internal account data lifecycle"
   }, {
+    "name" : "Finance reports",
+    "description" : "Historical financial analysis by period"
+  }, {
     "name" : "Incomes",
     "description" : "Income management"
   } ],
@@ -1217,6 +1220,58 @@
         }
       }
     },
+    "/api/v1/finance/reports/overview" : {
+      "get" : {
+        "tags" : [ "Finance reports" ],
+        "summary" : "Get a historical finance report",
+        "operationId" : "getOverview",
+        "parameters" : [ {
+          "name" : "X-Finance-Control-User-Id",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "from",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "to",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Report returned successfully",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FinanceReportResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid report period",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FinanceReportResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/finance/projections/cash-flow" : {
       "get" : {
         "tags" : [ "Cash-flow projections" ],
@@ -1773,10 +1828,10 @@
             "type" : "string",
             "format" : "date"
           },
-          "categoryCompatibleWithKind" : {
+          "dateRangeValid" : {
             "type" : "boolean"
           },
-          "dateRangeValid" : {
+          "categoryCompatibleWithKind" : {
             "type" : "boolean"
           }
         },
@@ -1912,6 +1967,114 @@
             "type" : "object",
             "additionalProperties" : {
               "type" : "number"
+            }
+          }
+        }
+      },
+      "FinanceReportCategoryResponse" : {
+        "type" : "object",
+        "properties" : {
+          "category" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "amount" : {
+            "type" : "number"
+          },
+          "percentage" : {
+            "type" : "number"
+          }
+        }
+      },
+      "FinanceReportExpenseResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "amount" : {
+            "type" : "number"
+          },
+          "transactionDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "category" : {
+            "type" : "string"
+          },
+          "categoryName" : {
+            "type" : "string"
+          }
+        }
+      },
+      "FinanceReportMonthResponse" : {
+        "type" : "object",
+        "properties" : {
+          "referenceMonth" : {
+            "type" : "string"
+          },
+          "totalIncome" : {
+            "type" : "number"
+          },
+          "totalExpenses" : {
+            "type" : "number"
+          },
+          "balance" : {
+            "type" : "number"
+          }
+        }
+      },
+      "FinanceReportResponse" : {
+        "type" : "object",
+        "properties" : {
+          "fromMonth" : {
+            "type" : "string"
+          },
+          "toMonth" : {
+            "type" : "string"
+          },
+          "totalIncome" : {
+            "type" : "number"
+          },
+          "totalExpenses" : {
+            "type" : "number"
+          },
+          "balance" : {
+            "type" : "number"
+          },
+          "savingsRatePercentage" : {
+            "type" : "number"
+          },
+          "incomeCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "expenseCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "months" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FinanceReportMonthResponse"
+            }
+          },
+          "expenseCategories" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FinanceReportCategoryResponse"
+            }
+          },
+          "topExpenses" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FinanceReportExpenseResponse"
             }
           }
         }
