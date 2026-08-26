@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Pageable;
 
 public interface ExpenseRepository extends JpaRepository<Expense, UUID>, JpaSpecificationExecutor<Expense> {
 
@@ -25,6 +26,25 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID>, JpaSpec
     boolean existsByRecurringTransactionIdAndOccurrenceDate(UUID recurringTransactionId, LocalDate occurrenceDate);
 
     boolean existsByOwnerUserIdAndCategory(UUID ownerUserId, String category);
+
+    long countByOwnerUserIdAndTransactionDateGreaterThanEqualAndTransactionDateLessThan(
+            UUID ownerUserId,
+            LocalDate startDate,
+            LocalDate endDate);
+
+    @Query("""
+            SELECT expense
+            FROM Expense expense
+            WHERE expense.ownerUserId = :ownerUserId
+              AND expense.transactionDate >= :startDate
+              AND expense.transactionDate < :endDate
+            ORDER BY expense.amount DESC, expense.transactionDate DESC, expense.createdAt DESC
+            """)
+    List<Expense> findTopExpensesBetween(
+            @Param("ownerUserId") UUID ownerUserId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            Pageable pageable);
 
     @Query("""
             SELECT COALESCE(SUM(expense.amount), 0)
