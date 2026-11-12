@@ -2,6 +2,25 @@
 
 Microserviço responsável pelo domínio financeiro pessoal: receitas, despesas, categorias e resumos mensais. Ele é consumido somente pelo BFF dentro da arquitetura do Finance Control.
 
+## Posição na arquitetura
+
+Este serviço é interno: não emite nem valida JWT e não deve ser acessado por
+clientes. O [`finance-control-bff`](https://github.com/Matheus22003/finance-control-bff)
+é a única fachada pública; o banco deste domínio é isolado dos demais.
+
+### Mapa do projeto
+
+| Repositório | Papel |
+|---|---|
+| [`finance-control-bff`](https://github.com/Matheus22003/finance-control-bff) | API pública e agregação |
+| `finance-control-finance-service` | Receitas, despesas, categorias, orçamento, recorrências, metas e projeções |
+| [`finance-control-debt-service`](https://github.com/Matheus22003/finance-control-debt-service) | Pessoas, grupos, dívidas e pagamentos |
+| [`finance-control-infra`](https://github.com/Matheus22003/finance-control-infra) | PostgreSQL, redes, Compose e deploy |
+| [`finance-control-docs`](https://github.com/Matheus22003/finance-control-docs) | Contratos, arquitetura e operação |
+
+Para executar o serviço integrado, use o Compose do repositório de infraestrutura;
+para entender os contratos públicos, consulte `finance-control-docs`.
+
 ## Stack
 
 - Java `21`
